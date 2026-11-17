@@ -22,28 +22,7 @@ It can. It took me an afternoon, plus a few hours of being confused by Google Cl
 
 Every time I push to `main`, GitHub Actions starts a fresh Ubuntu machine and does this:
 
-```
-  git push (main)
-        │
-        ▼
-┌─────────────────────────────────────────────┐
-│           GitHub Actions Runner             │
-│                                             │
-│   1. Checkout code                          │
-│   2. Set up Java 17 and Flutter             │
-│   3. flutter pub get                        │
-│   4. flutter analyze        ── quality gate │
-│   5. flutter test           ── quality gate │
-│   6. Decode keystore from secret            │
-│   7. Accept Android SDK licenses            │
-│   8. Bump build number                      │
-│   9. flutter build appbundle --release      │
-│  10. Upload .aab to Google Play             │
-└─────────────────────────────────────────────┘
-        │
-        ▼
-  Google Play Console → Internal testing track
-```
+![Pipeline flow: git push triggers GitHub Actions, which sets up, runs quality gates, signs and builds, then uploads to Google Play internal testing](https://raw.githubusercontent.com/souravbarman01/CICD_Flutter/main/images/pipeline_flow.png)
 
 The part I like most is steps 4 and 5. If the analyzer complains or a test fails, the run stops before anything is signed or uploaded. Broken code never reaches my testers.
 
@@ -114,16 +93,7 @@ This was the part that took me the longest, mostly because it happens across two
 
 The pipeline needs its own identity to upload builds. In Google's world that's a **service account**: a robot user with its own email address and private key. You create it in Google Cloud, then invite it into Play Console like a teammate.
 
-```
-Google Cloud Console                          Google Play Console
-┌──────────────────────────────┐              ┌──────────────────────────────┐
-│ 1. Select project            │              │ 5. Invite service account    │
-│ 2. Enable Play Developer API │  ── email ─▶ │    email as a user           │
-│ 3. Create service account    │              │ 6. Grant app permissions     │
-│ 4. Create JSON key ──────────┼──┐           └──────────────────────────────┘
-└──────────────────────────────┘  │
-                                  └─▶ GitHub Secret: PLAY_CONFIG_JSON
-```
+![Service account setup: create it and its JSON key in Google Cloud Console, store the key as a GitHub secret, then invite its email in Google Play Console](https://raw.githubusercontent.com/souravbarman01/CICD_Flutter/main/images/github_to_play.png)
 
 ### 2.1 Pick a Google Cloud project
 
